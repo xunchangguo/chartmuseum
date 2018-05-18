@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kubernetes-helm/chartmuseum/pkg/storage"
+	"github.com/xunchangguo/chartmuseum/pkg/storage"
 
 	"k8s.io/helm/pkg/chartutil"
 	helm_chart "k8s.io/helm/pkg/proto/hapi/chart"
@@ -41,6 +41,15 @@ func ChartPackageFilenameFromContent(content []byte) (string, error) {
 	meta := chart.Metadata
 	filename := fmt.Sprintf("%s-%s.%s", meta.Name, meta.Version, ChartPackageFileExtension)
 	return filename, nil
+}
+
+func ChartFromStorageObject(object *storage.Object) (*helm_chart.Chart, error) {
+	chart, err := chartFromContent(object.Content)
+	if err != nil {
+		return nil, ErrorInvalidChartPackage
+	}
+
+	return chart, nil
 }
 
 // ChartVersionFromStorageObject returns a chart version from a storage object

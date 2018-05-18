@@ -1,7 +1,7 @@
 package multitenant
 
 import (
-	cm_router "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/router"
+	cm_router "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/router"
 )
 
 func (s *MultiTenantServer) Routes() []*cm_router.Route {
@@ -21,6 +21,7 @@ func (s *MultiTenantServer) Routes() []*cm_router.Route {
 		{"GET", "/api/:repo/charts", s.getAllChartsRequestHandler, cm_router.RepoPullAction},
 		{"GET", "/api/:repo/charts/:name", s.getChartRequestHandler, cm_router.RepoPullAction},
 		{"GET", "/api/:repo/charts/:name/:version", s.getChartVersionRequestHandler, cm_router.RepoPullAction},
+		{"GET", "/api/:repo/charts/:name/:version/content", s.getChartContentRequestHandler, cm_router.RepoPullAction},
 		{"POST", "/api/:repo/charts", s.postRequestHandler, cm_router.RepoPushAction},
 		{"POST", "/api/:repo/prov", s.postProvenanceFileRequestHandler, cm_router.RepoPushAction},
 		{"DELETE", "/api/:repo/charts/:name/:version", s.deleteChartVersionRequestHandler, cm_router.RepoPushAction},

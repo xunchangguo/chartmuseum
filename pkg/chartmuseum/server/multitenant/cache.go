@@ -22,9 +22,9 @@ import (
 	pathutil "path"
 	"sync"
 
-	cm_logger "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/logger"
-	cm_repo "github.com/kubernetes-helm/chartmuseum/pkg/repo"
-	cm_storage "github.com/kubernetes-helm/chartmuseum/pkg/storage"
+	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
+	cm_repo "github.com/xunchangguo/chartmuseum/pkg/repo"
+	cm_storage "github.com/xunchangguo/chartmuseum/pkg/storage"
 
 	"github.com/ghodss/yaml"
 	"github.com/gin-gonic/gin"

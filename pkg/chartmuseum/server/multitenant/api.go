@@ -3,8 +3,8 @@ package multitenant
 import (
 	pathutil "path/filepath"
 
-	cm_logger "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/logger"
-	cm_repo "github.com/kubernetes-helm/chartmuseum/pkg/repo"
+	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
+	cm_repo "github.com/xunchangguo/chartmuseum/pkg/repo"
 
 	helm_repo "k8s.io/helm/pkg/repo"
 )

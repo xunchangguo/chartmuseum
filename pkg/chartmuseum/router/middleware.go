@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	cm_logger "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/logger"
+	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/satori/go.uuid"
@@ -54,7 +54,8 @@ func setupContext(c *gin.Context) {
 	c.Set("requestcount", reqCount)
 	reqID := c.Request.Header.Get("X-Request-Id")
 	if reqID == "" {
-		reqID = uuid.NewV4().String()
+		uuid, _ := uuid.NewV4()
+		reqID = uuid.String()
 	}
 	c.Set("requestid", reqID)
 	c.Writer.Header().Set("X-Request-Id", reqID)

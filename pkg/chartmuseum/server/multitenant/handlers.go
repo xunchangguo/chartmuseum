@@ -8,7 +8,7 @@ import (
 	"net/http"
 	pathutil "path"
 
-	cm_repo "github.com/kubernetes-helm/chartmuseum/pkg/repo"
+	cm_repo "github.com/xunchangguo/chartmuseum/pkg/repo"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 working.</p>
 
 <p>For online documentation and support please refer to the
-<a href="https://github.com/kubernetes-helm/chartmuseum">GitHub project</a>.<br/>
+<a href="https://github.com/xunchangguo/chartmuseum">GitHub project</a>.<br/>
 
 <p><em>Thank you for using ChartMuseum.</em></p>
 </body>
@@ -122,6 +122,25 @@ func (server *MultiTenantServer) getChartVersionRequestHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, chartVersion)
+}
+
+func (server *MultiTenantServer) getChartContentRequestHandler(c *gin.Context) {
+	repo := c.Param("repo")
+	name := c.Param("name")
+	version := c.Param("version")
+	log := server.Logger.ContextLoggingFn(c)
+	filename := cm_repo.ChartPackageFilenameFromNameVersion(name, version)
+	storageObject, err := server.getStorageObject(log, repo, filename)
+	if err != nil {
+		c.JSON(err.Status, gin.H{"error": err.Message})
+		return
+	}
+	chartContent, errr := cm_repo.ChartFromStorageObject(storageObject.Object)
+	if errr != nil {
+		c.JSON(404, gin.H{"error": errr.Error()})
+		return
+	}
+	c.JSON(200, chartContent)
 }
 
 func (server *MultiTenantServer) deleteChartVersionRequestHandler(c *gin.Context) {

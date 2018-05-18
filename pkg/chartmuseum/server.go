@@ -1,10 +1,10 @@
 package chartmuseum
 
 import (
-	cm_logger "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/logger"
-	cm_router "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/router"
-	mt "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/server/multitenant"
-	"github.com/kubernetes-helm/chartmuseum/pkg/storage"
+	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
+	cm_router "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/router"
+	mt "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/server/multitenant"
+	"github.com/xunchangguo/chartmuseum/pkg/storage"
 )
 
 type (
