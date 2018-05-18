@@ -33,10 +33,10 @@ func (suite *GoogleTestSuite) TearDownSuite() {
 }
 
 func (suite *GoogleTestSuite) TestListObjects() {
-	_, err := suite.BrokenGoogleCSBackend.ListObjects()
+	_, err := suite.BrokenGoogleCSBackend.ListObjects("")
 	suite.NotNil(err, "cannot list objects with bad bucket")
 
-	_, err = suite.NoPrefixGoogleCSBackend.ListObjects()
+	_, err = suite.NoPrefixGoogleCSBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
 }
 
@@ -51,7 +51,8 @@ func (suite *GoogleTestSuite) TestPutObject() {
 }
 
 func TestGoogleStorageTestSuite(t *testing.T) {
-	if os.Getenv("TEST_CLOUD_STORAGE") == "1" {
+	if os.Getenv("TEST_CLOUD_STORAGE") == "1" &&
+		os.Getenv("TEST_STORAGE_GOOGLE_BUCKET") != "" {
 		suite.Run(t, new(GoogleTestSuite))
 	}
 }

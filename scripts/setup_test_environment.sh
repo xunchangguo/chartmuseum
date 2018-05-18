@@ -1,10 +1,15 @@
 #!/bin/bash -ex
 
-HELM_VERSION="2.7.2"
+HELM_VERSION="2.9.1"
 REQUIRED_TEST_STORAGE_ENV_VARS=(
     "TEST_STORAGE_AMAZON_BUCKET"
     "TEST_STORAGE_AMAZON_REGION"
     "TEST_STORAGE_GOOGLE_BUCKET"
+    "TEST_STORAGE_MICROSOFT_CONTAINER"
+    "TEST_STORAGE_ALIBABA_BUCKET"
+    "TEST_STORAGE_ALIBABA_ENDPOINT"
+    "TEST_STORAGE_OPENSTACK_CONTAINER"
+    "TEST_STORAGE_OPENSTACK_REGION"
 )
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -52,6 +57,9 @@ install_helm() {
         chmod +x ./helm
         popd
         helm init --client-only
+
+        # remove any repos that come out-of-the-box (i.e. "stable")
+        helm repo list | sed -n '1!p' | awk '{print $1}' | xargs -L1 helm repo remove
     fi
 }
 
@@ -62,6 +70,8 @@ package_test_charts() {
         helm package --sign --key helm-test --keyring ../../pgp/helm-test-key.secret .
         popd
     done
+    # add another version to repo for metric tests
+    helm package --sign --key helm-test --keyring ../pgp/helm-test-key.secret --version 0.2.0 -d mychart/ mychart/.
     popd
 }
 

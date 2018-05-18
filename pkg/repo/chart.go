@@ -61,12 +61,22 @@ func ChartVersionFromStorageObject(object storage.Object) (*helm_repo.ChartVersi
 		return nil, err
 	}
 	chartVersion := &helm_repo.ChartVersion{
-		URLs:     []string{fmt.Sprintf("charts/%s", object.Path)},
+		URLs:     []string{fmt.Sprintf("charts/%s", pathutil.Base(object.Path))},
 		Metadata: chart.Metadata,
 		Digest:   digest,
 		Created:  object.LastModified,
 	}
 	return chartVersion, nil
+}
+
+// StorageObjectFromChartVersion returns a storage object from a chart version (empty content)
+func StorageObjectFromChartVersion(chartVersion *helm_repo.ChartVersion) storage.Object {
+	object := storage.Object{
+		Path: pathutil.Base(chartVersion.URLs[0]),
+		Content: []byte{},
+		LastModified: chartVersion.Created,
+	}
+	return object
 }
 
 func chartFromContent(content []byte) (*helm_chart.Chart, error) {

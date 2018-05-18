@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.10
         environment:
           GOOGLE_APPLICATION_CREDENTIALS: /home/circleci/gcp-key.json
     working_directory: /go/src/github.com/kubernetes-helm/chartmuseum
@@ -29,18 +29,14 @@ jobs:
 
       # Archive artifacts
       - store_artifacts:
-          when: always
           path: .cover/
           destination: .cover/
       - store_artifacts:
-          when: always
           path: goviz.png
           destination: goviz.png
       - store_artifacts:
-          when: always
           path: bin/
           destination: bin/
       - store_artifacts:
-          when: always
           path: .robot/
           destination: .robot/

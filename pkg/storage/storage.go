@@ -25,7 +25,7 @@ type (
 
 	// Backend is a generic interface for storage backends
 	Backend interface {
-		ListObjects() ([]Object, error)
+		ListObjects(prefix string) ([]Object, error)
 		GetObject(path string) (Object, error)
 		PutObject(path string, content []byte) error
 		DeleteObject(path string) error
@@ -45,7 +45,7 @@ func GetObjectSliceDiff(os1 []Object, os2 []Object) ObjectSliceDiff {
 		for _, o2 := range os2 {
 			if o1.Path == o2.Path {
 				found = true
-				if o1.LastModified != o2.LastModified {
+				if !o1.LastModified.Equal(o2.LastModified) {
 					diff.Updated = append(diff.Updated, o2)
 				}
 				break

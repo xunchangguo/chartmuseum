@@ -24,13 +24,18 @@ func (suite *LocalTestSuite) SetupSuite() {
 }
 
 func (suite *LocalTestSuite) TestListObjects() {
-	_, err := suite.LocalFilesystemBackend.ListObjects()
-	suite.NotNil(err, "cannot list objects with bad root dir")
+	_, err := suite.LocalFilesystemBackend.ListObjects("")
+	suite.Nil(err, "list objects does not return error if dir does not exist")
 }
 
 func (suite *LocalTestSuite) TestGetObject() {
 	_, err := suite.LocalFilesystemBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad path")
+}
+
+func (suite *LocalTestSuite) TestPutObjectWithNonExistentPath() {
+	err := suite.LocalFilesystemBackend.PutObject("testdir/test/test.tgz", []byte("test content"))
+	suite.Nil(err)
 }
 
 func TestLocalStorageTestSuite(t *testing.T) {

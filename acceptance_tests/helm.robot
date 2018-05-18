@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation     Tests to verify that ChartMuseum is able to work with
 ...               Helm CLI and act as a valid Helm Chart Repository using
-...               all supported storage backends (local, s3, gcs).
+...               all supported storage backends (local, s3, gcs, openstack).
 Library           String
 Library           OperatingSystem
 Library           lib/ChartMuseum.py
@@ -19,14 +19,26 @@ ChartMuseum works with Helm using Amazon cloud storage
 ChartMuseum works with Helm using Google cloud storage
     Test Helm integration   google
 
+ChartMuseum works with Helm using Microsoft cloud storage
+    Test Helm integration   microsoft
+
+ChartMuseum works with Helm using Alibaba cloud storage
+    Test Helm integration   alibaba
+
+ChartMuseum works with Helm using Openstack cloud storage
+    Test Helm integration   openstack
+
 *** Keyword ***
 Test Helm integration
     [Arguments]    ${storage}
 
-    # return fast if we cannot find a bucket in an environment variable.
+    # return fast if we cannot find a bucket/container in an environment variable.
     ${USTORAGE}=  Convert To Uppercase  ${storage}
-    ${ENV_STORAGE_SET}=  Get Environment variable  TEST_STORAGE_${USTORAGE}_BUCKET  ${EMPTY}
-    Return from Keyword if  '${ENV_STORAGE_SET}'=='${EMPTY}' and '${storage}'!='local'
+    ${ENV_STORAGE_BUCKET_SET}=  Get Environment variable  TEST_STORAGE_${USTORAGE}_BUCKET  ${EMPTY}
+    Return from Keyword if  '${ENV_STORAGE_BUCKET_SET}'=='${EMPTY}' and '${storage}'!='local' and '${storage}'!='microsoft' and '${storage}'!='openstack'
+    ${ENV_STORAGE_CONTAINER_SET}=  Get Environment variable  TEST_STORAGE_${USTORAGE}_CONTAINER  ${EMPTY}
+    Return from Keyword if  '${ENV_STORAGE_CONTAINER_SET}'=='${EMPTY}' and ('${storage}'=='microsoft' or '${storage}'=='openstack')
+    ${ENV_STORAGE_CONTAINER_SET}=  Get Environment variable  TEST_STORAGE_${USTORAGE}_CONTAINER  ${EMPTY}
 
     Start ChartMuseum server with storage backend  ${storage}
     Able to add ChartMuseum as Helm chart repo
@@ -45,7 +57,7 @@ Test Helm integration
 Start ChartMuseum server with storage backend
     [Arguments]    ${storage}
     ChartMuseum.start chartmuseum  ${storage}
-    Sleep  2
+    ChartMuseum.wait for chartmuseum
 
 Upload test charts to ChartMuseum
     ChartMuseum.upload test charts

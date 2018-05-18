@@ -5,6 +5,7 @@ import (
 	"os"
 
 	pathutil "path"
+	"path/filepath"
 )
 
 // LocalFilesystemBackend is a storage backend for local filesystem storage
@@ -14,21 +15,22 @@ type LocalFilesystemBackend struct {
 
 // NewLocalFilesystemBackend creates a new instance of LocalFilesystemBackend
 func NewLocalFilesystemBackend(rootDirectory string) *LocalFilesystemBackend {
-	if _, err := os.Stat(rootDirectory); os.IsNotExist(err) {
-		err := os.MkdirAll(rootDirectory, 0777)
-		if err != nil {
-			panic(err)
-		}
+	absPath, err := filepath.Abs(rootDirectory)
+	if err != nil {
+		panic(err)
 	}
-	b := &LocalFilesystemBackend{RootDirectory: rootDirectory}
+	b := &LocalFilesystemBackend{RootDirectory: absPath}
 	return b
 }
 
 // ListObjects lists all objects in root directory (depth 1)
-func (b LocalFilesystemBackend) ListObjects() ([]Object, error) {
+func (b LocalFilesystemBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
-	files, err := ioutil.ReadDir(b.RootDirectory)
+	files, err := ioutil.ReadDir(pathutil.Join(b.RootDirectory, prefix))
 	if err != nil {
+		if os.IsNotExist(err) {  // OK if the directory doesnt exist yet
+			err = nil
+		}
 		return objects, err
 	}
 	for _, f := range files {
@@ -62,7 +64,19 @@ func (b LocalFilesystemBackend) GetObject(path string) (Object, error) {
 // PutObject puts an object in root directory
 func (b LocalFilesystemBackend) PutObject(path string, content []byte) error {
 	fullpath := pathutil.Join(b.RootDirectory, path)
-	err := ioutil.WriteFile(fullpath, content, 0644)
+	folderPath := pathutil.Dir(fullpath)
+	_, err := os.Stat(folderPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(folderPath, 0777)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	err = ioutil.WriteFile(fullpath, content, 0644)
 	return err
 }
 

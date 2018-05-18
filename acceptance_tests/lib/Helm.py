@@ -15,12 +15,15 @@ class Helm(common.CommandRunner):
         self.run_command('helm search %s/%s' % (common.HELM_REPO_NAME, chart))
 
     def update_chart_repos(self):
-        # "| head -n -1" prevents UnicodeDecodeError due to last line of output
-        self.run_command('helm repo update | head -n -1 | \
+        # "| awk 'NR>1{print buf}{buf = $0}'" prevents UnicodeDecodeError
+        # due to last line of output, which contains the k8s steering wheel
+        self.run_command('helm repo update | awk \'NR>1{print buf}{buf = $0}\' | \
                             grep "Successfully got an update from the \\"%s\\""' \
                          % common.HELM_REPO_NAME)
 
     def fetch_and_verify_chart(self, chart):
         os.chdir(self.rootdir)
+        if not os.path.exists(common.ACCEPTANCE_DIR):
+            os.makedirs(common.ACCEPTANCE_DIR)
         os.chdir(common.ACCEPTANCE_DIR)
         self.run_command('helm fetch --verify --keyring ../%s %s/%s' % (common.KEYRING, common.HELM_REPO_NAME, chart))

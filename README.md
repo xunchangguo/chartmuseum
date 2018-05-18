@@ -6,7 +6,7 @@
 [![GoDoc](https://godoc.org/github.com/kubernetes-helm/chartmuseum?status.svg)](https://godoc.org/github.com/kubernetes-helm/chartmuseum)
 <sub>**_"Preserve your precious artifacts... in the cloud!"_**<sub>
 
-*ChartMuseum* is an open-source **[Helm Chart Repository](https://github.com/kubernetes/helm/blob/master/docs/chart_repository.md)** written in Go (Golang), with support for cloud storage backends, including [Google Cloud Storage](https://cloud.google.com/storage/) and [Amazon S3](https://aws.amazon.com/s3/).
+*ChartMuseum* is an open-source **[Helm Chart Repository](https://github.com/kubernetes/helm/blob/master/docs/chart_repository.md)** written in Go (Golang), with support for cloud storage backends, including [Google Cloud Storage](https://cloud.google.com/storage/), [Amazon S3](https://aws.amazon.com/s3/), [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/), [Alibaba Cloud OSS Storage](https://www.alibabacloud.com/product/oss) and [Openstack Object Storage](https://developer.openstack.org/api-ref/object-store/).
 
 Works as a valid Helm Chart Repository, and also provides an API for uploading new chart packages to storage etc.
 
@@ -53,6 +53,7 @@ Powered by some great Go technology:
 - `GET /api/charts/<name>/<version>` - describe a chart version
 
 ### Server Info
+- `GET /` - HTML welcome page
 - `GET /health` - returns 200 OK
 
 ## Uploading a Chart Package
@@ -78,6 +79,11 @@ Both files can also be uploaded at once (or one at a time) on the `/api/charts` 
 
 ```bash
 curl -F "chart=@mychart-0.1.0.tgz" -F "prov=@mychart-0.1.0.tgz.prov" http://localhost:8080/api/charts
+```
+
+You can also use the [helm-push plugin](https://github.com/chartmuseum/helm-push):
+```
+helm push mychart/ chartmuseum
 ```
 
 ## Installing Charts into Kubernetes
@@ -115,7 +121,7 @@ mv ./chartmuseum /usr/local/bin
 ```
 Using `latest` in URLs above will get the latest binary (built from master branch).
 
-Replace `latest` with `$(curl -s https://s3.amazonaws.com/chartmuseum/release/stable.txt)` to automatically determine the latest stable release (e.g. `v0.2.7`).
+Replace `latest` with `$(curl -s https://s3.amazonaws.com/chartmuseum/release/stable.txt)` to automatically determine the latest stable release (e.g. `v0.6.0`).
 
 Determine your version with `chartmuseum --version`.
 
@@ -135,6 +141,32 @@ chartmuseum --debug --port=8080 \
   --storage-amazon-prefix="" \
   --storage-amazon-region="us-east-1"
 ```
+You need at least the following permissions inside your IAM Policy
+```yaml
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowListObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::my-s3-bucket"
+    },
+    {
+      "Sid": "AllowObjectsCRUD",
+      "Effect": "Allow",
+      "Action": [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::my-s3-bucket/*"
+    }
+  ]
+}
+```
 
 #### Using with Google Cloud Storage
 Make sure your environment is properly setup to access `my-gcs-bucket`
@@ -145,8 +177,58 @@ chartmuseum --debug --port=8080 \
   --storage-google-prefix=""
 ```
 
+#### Using with Microsoft Azure Blob Storage
+
+Make sure your environment is properly setup to access `mycontainer`.
+
+To do so, you must set the following env vars:
+- `AZURE_STORAGE_ACCOUNT`
+- `AZURE_STORAGE_ACCESS_KEY`
+
+```bash
+chartmuseum --debug --port=8080 \
+  --storage="microsoft" \
+  --storage-microsoft-container="mycontainer" \
+  --storage-microsoft-prefix=""
+```
+
+#### Using with Alibaba Cloud OSS Storage
+
+Make sure your environment is properly setup to access `my-oss-bucket`.
+
+To do so, you must set the following env vars:
+- `ALIBABA_CLOUD_ACCESS_KEY_ID`
+- `ALIBABA_CLOUD_ACCESS_KEY_SECRET`
+
+```bash
+chartmuseum --debug --port=8080 \
+  --storage="alibaba" \
+  --storage-alibaba-bucket="my-oss-bucket" \
+  --storage-alibaba-prefix="" \
+  --storage-alibaba-endpoint="oss-cn-beijing.aliyuncs.com"
+```
+
+#### Using with Openstack Object Storage
+
+Make sure your environment is properly setup to access `mycontainer`.
+
+To do so, you must set the following env vars (depending on your openstack version):
+- `OS_AUTH_URL`
+- either `OS_PROJECT_NAME` or `OS_TENANT_NAME` or `OS_PROJECT_ID` or `OS_TENANT_ID`
+- either `OS_DOMAIN_NAME` or `OS_DOMAIN_ID`
+- either `OS_USERNAME` or `OS_USERID`
+- `OS_PASSWORD`
+
+```bash
+chartmuseum --debug --port=8080 \
+  --storage="openstack" \
+  --storage-openstack-container="mycontainer" \
+  --storage-openstack-prefix="" \
+  --storage-openstack-region="myregion"
+```
+
 #### Using with local filesystem storage
-Make sure you have read-write access to `./chartstorage` (will create if doesn't exist)
+Make sure you have read-write access to `./chartstorage` (will create if doesn't exist on first upload)
 ```bash
 chartmuseum --debug --port=8080 \
   --storage="local" \
@@ -158,24 +240,34 @@ If both of the following options are provided, basic http authentication will pr
 - `--basic-auth-user=<user>` - username for basic http authentication
 - `--basic-auth-pass=<pass>` - password for basic http authentication
 
+You may want basic auth to only be applied to operations that can change Charts, i.e. PUT, POST and DELETE.  So to avoid basic auth on GET operations use
+
+- `--auth-anonymous-get` - allow anonymous GET operations
+
 #### HTTPS
 If both of the following options are provided, the server will listen and serve HTTPS:
 - `--tls-cert=<crt>` - path to tls certificate chain file
 - `--tls-key=<key>` - path to tls key file
 
 #### Just generating index.yaml
-You can specify the `--gen-index` option if you only wish to use _ChartMuseum_ to generate your index.yaml file.
+You can specify the `--gen-index` option if you only wish to use _ChartMuseum_ to generate your index.yaml file. Note that this will only work with `--depth=0`.
 
 The contents of index.yaml will be printed to stdout and the program will exit. This is useful if you are satisfied with your current Helm CI/CD process and/or don't want to monitor another webservice.
 
 #### Other CLI options
 - `--log-json` - output structured logs as json
 - `--disable-api` - disable all routes prefixed with /api
+- `--disable-statefiles` - disable use of index-cache.yaml
 - `--allow-overwrite` - allow chart versions to be re-uploaded
 - `--chart-url=<url>` - absolute url for .tgzs in index.yaml
 - `--storage-amazon-endpoint=<endpoint>` - alternative s3 endpoint
+- `--storage-amazon-sse=<algorithm>` - s3 server side encryption algorithm
+- `--storage-openstack-cacert=<path>` - path to a custom ca certificates bundle for openstack
 - `--chart-post-form-field-name=<field>` - form field which will be queried for the chart file content
 - `--prov-post-form-field-name=<field>` - form field which will be queried for the provenance file content
+- `--index-limit=<number>` - limit the number of parallel indexers
+- `--context-path=<path>` - base context path (new root for application routes)
+- `--depth=<number>` - levels of nested repos for multitenancy
 
 ### Docker Image
 Available via [Docker Hub](https://hub.docker.com/r/chartmuseum/chartmuseum/).
@@ -195,17 +287,82 @@ docker run --rm -it \
 ```
 
 ### Helm Chart
-There is a [Helm chart for *ChartMuseum*](https://github.com/kubernetes/charts/tree/master/incubator/chartmuseum) itself which can be found in the official Kubernetes Charts repository.
+There is a [Helm chart for *ChartMuseum*](https://github.com/kubernetes/charts/tree/master/stable/chartmuseum) itself which can be found in the official Kubernetes Charts repository.
 
-You can also view it on [Kubeapps Hub](https://hub.kubeapps.com/charts/incubator/chartmuseum).
+You can also view it on [Kubeapps Hub](https://hub.kubeapps.com/charts/stable/chartmuseum).
 
 To install:
 ```bash
-helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com
-helm install incubator/chartmuseum
+helm repo add stable https://kubernetes-charts.storage.googleapis.com
+helm install stable/chartmuseum
 ```
 
 If interested in making changes, please submit a PR to kubernetes/charts. Before doing any work, please check for any [currently open pull requests](https://github.com/kubernetes/charts/pulls?q=is%3Apr+is%3Aopen+chartmuseum). Thanks!
+
+## Multitenancy
+Multitenancy is supported with the `--depth` flag.
+
+To begin, start with a directory structure such as
+```
+charts
+├── org1
+│   ├── repoa
+│   │   └── nginx-ingress-0.9.3.tgz
+├── org2
+│   ├── repob
+│   │   └── chartmuseum-0.4.0.tgz
+```
+
+This represents a storage layout appropriate for `--depth=2`. The organization level can be eliminated by using `--depth=1`. The default depth is 0 (singletenant server).
+
+Start the server with `--depth=2`, pointing to the `charts/` directory:
+```
+chartmuseum --debug --depth=2 --storage="local" --storage-local-rootdir=./charts
+```
+
+This example will provide two separate Helm Chart Repositories at the following locations:
+- `http://localhost:8080/org1/repoa`
+- `http://localhost:8080/org2/repob`
+
+This should work with all supported storage backends.
+
+To use the chart manipulation routes, simply place the name of the repo directly after "/api" in the route:
+
+```bash
+curl -F "chart=@mychart-0.1.0.tgz" http://localhost:8080/api/org1/repoa/charts
+```
+
+## Prometheus Metrics
+
+ChartMuseum exposes its [Prometheus metrics](https://prometheus.io/docs/concepts/metric_types/) at the `/metrics` route on the main port. This can be disabled with the `--disable-metrics` command-line flag or the `DISABLE_METRICS` environment variable.
+
+> Note that the Kubernetes chart currently disables metrics by default (`DISABLE_METRICS=true` is set in the chart).
+
+Below are the current application metrics exposed. Note that there is a per tenant (repo) label. The repo label corresponds to the depth parameter, so a depth=2 as the example above would
+have repo labels named `org1/repoa` and `org2/repob`.
+
+| Metric                                   | Type           | Labels     | Description                              |
+| ---------------------------------------- | -------------- | ---------- | ---------------------------------------- |
+| chartmuseum_charts_served_total          | Gauge          | {repo="*"} | Total number of charts                   |
+| chartmuseum_charts_versions_served_total | Gauge          | {repo="*"} | Total number of chart versions available |
+
+*: see above for repo label
+
+There are other general global metrics harvested (per process, hence for all tenants). You can get the complete list by using the `/metrics` route.
+
+| Metric                                       | Type    | Labels                                                | Description                               |
+| -------------------------------------------- | ------- | ----------------------------------------------------- | ----------------------------------------- |
+| chartmuseum_request_duration_seconds         | Summary | {quantile="0.5"}, {quantile="0.9"}, {quantile="0.99"} | The HTTP request latencies in seconds     |
+| chartmuseum_request_duration_seconds_sum     |         |                                                       |                                           |
+| chartmuseum_request_duration_seconds_count   |         |                                                       |                                           |
+| chartmuseum_request_size_bytes               | Summary | {quantile="0.5"}, {quantile="0.9"}, {quantile="0.99"} | The HTTP request sizes in bytes           |
+| chartmuseum_request_size_bytes_sum           |         |                                                       |                                           |
+| chartmuseum_request_size_bytes_count         |         |                                                       |                                           |
+| chartmuseum_response_size_bytes              | Summary | {quantile="0.5"}, {quantile="0.9"}, {quantile="0.99"} | The HTTP response sizes in bytes          |
+| chartmuseum_response_size_bytes_sum          |         |                                                       |                                           |
+| chartmuseum_response_size_bytes_count        |         |                                                       |                                           |
+| go_goroutines                                | Gauge   |                                                       | Number of goroutines that currently exist |
+
 
 ## Notes on index.yaml
 The repository index (index.yaml) is dynamically generated based on packages found in storage. If you store your own version of index.yaml, it will be completely ignored.
@@ -218,6 +375,8 @@ You are no longer required to maintain your own version of index.yaml using `hel
 
 The `--gen-index` CLI option (described above) can be used to generate and print index.yaml to stdout.
 
+Upon index regeneration, *ChartMuseum* will, however, save a statefile in storage called `index-cache.yaml` used for cache optimization. This file is only meant for internal use, but may be able to be used for migration to simple storage.
+
 ## Mirroring the official Kubernetes repositories
 Please see `scripts/mirror_k8s_repos.sh` for an example of how to download all .tgz packages from the official Kubernetes repositories (both stable and incubator).
 
@@ -229,3 +388,4 @@ chartmuseum --debug --port=8080 --storage="local" --storage-local-rootdir="./mir
 
 ## Community
 You can reach the *ChartMuseum* community and developers in the [Kubernetes Slack](https://slack.k8s.io) **#chartmuseum** channel.
+

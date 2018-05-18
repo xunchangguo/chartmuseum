@@ -19,10 +19,11 @@ type AmazonS3Backend struct {
 	Downloader *s3manager.Downloader
 	Prefix     string
 	Uploader   *s3manager.Uploader
+	SSE        string
 }
 
 // NewAmazonS3Backend creates a new instance of AmazonS3Backend
-func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint string) *AmazonS3Backend {
+func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint string, sse string) *AmazonS3Backend {
 	service := s3.New(session.New(), &aws.Config{
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
@@ -35,16 +36,18 @@ func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint st
 		Downloader: s3manager.NewDownloaderWithClient(service),
 		Prefix:     cleanPrefix(prefix),
 		Uploader:   s3manager.NewUploaderWithClient(service),
+		SSE:        sse,
 	}
 	return b
 }
 
 // ListObjects lists all objects in Amazon S3 bucket, at prefix
-func (b AmazonS3Backend) ListObjects() ([]Object, error) {
+func (b AmazonS3Backend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
+	prefix = pathutil.Join(b.Prefix, prefix)
 	s3Input := &s3.ListObjectsInput{
 		Bucket: aws.String(b.Bucket),
-		Prefix: aws.String(b.Prefix),
+		Prefix: aws.String(prefix),
 	}
 	for {
 		s3Result, err := b.Client.ListObjects(s3Input)
@@ -52,7 +55,7 @@ func (b AmazonS3Backend) ListObjects() ([]Object, error) {
 			return objects, err
 		}
 		for _, obj := range s3Result.Contents {
-			path := removePrefixFromObjectPath(b.Prefix, *obj.Key)
+			path := removePrefixFromObjectPath(prefix, *obj.Key)
 			if objectPathIsInvalid(path) {
 				continue
 			}
@@ -100,6 +103,11 @@ func (b AmazonS3Backend) PutObject(path string, content []byte) error {
 		Key:    aws.String(pathutil.Join(b.Prefix, path)),
 		Body:   bytes.NewBuffer(content),
 	}
+
+	if b.SSE != "" {
+		s3Input.ServerSideEncryption = aws.String(b.SSE)
+	}
+
 	_, err := b.Uploader.Upload(s3Input)
 	return err
 }
