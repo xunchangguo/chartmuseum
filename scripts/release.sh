@@ -30,7 +30,7 @@ check_env_vars() {
     set +x
     ALL_ENV_VARS_PRESENT="1"
     for VAR in ${REQUIRED_RELEASE_ENV_VARS[@]}; do
-           if [ "${!VAR}" == "" ]; then
+           if [ "${VAR}" == "" ]; then
             echo "missing required test env var: $VAR"
             ALL_ENV_VARS_PRESENT="0"
         fi
