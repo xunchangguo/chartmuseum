@@ -16,8 +16,8 @@ main() {
     check_args
     check_env_vars
     docker_build
-    release_latest
-    release_stable
+#    release_latest
+#    release_stable
 }
 
 check_args() {
