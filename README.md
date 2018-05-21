@@ -1,7 +1,7 @@
 # ChartMuseum
 <img align="right" src="https://github.com/xunchangguo/chartmuseum/raw/master/logo.png">
 
-[![CircleCI](https://circleci.com/gh/kubernetes-helm/chartmuseum.svg?style=svg)](https://circleci.com/gh/kubernetes-helm/chartmuseum)
+[![CircleCI](https://circleci.com/gh/xunchangguo/chartmuseum.svg?style=svg)](https://circleci.com/gh/xunchangguo/chartmuseum)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xunchangguo/chartmuseum)](https://goreportcard.com/report/github.com/xunchangguo/chartmuseum)
 [![GoDoc](https://godoc.org/github.com/xunchangguo/chartmuseum?status.svg)](https://godoc.org/github.com/xunchangguo/chartmuseum)
 <sub>**_"Preserve your precious artifacts... in the cloud!"_**<sub>
@@ -51,6 +51,7 @@ Powered by some great Go technology:
 - `GET /api/charts` - list all charts
 - `GET /api/charts/<name>` - list all versions of a chart
 - `GET /api/charts/<name>/<version>` - describe a chart version
+- `GET /api/charts/<name>/<version>/content` - get a chart version content
 
 ### Server Info
 - `GET /` - HTML welcome page
