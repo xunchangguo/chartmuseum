@@ -29,9 +29,7 @@ main() {
 check_storage_env_vars() {
     set +x
     SOME_ENV_VARS_PRESENT="0"
-    echo “${REQUIRED_TEST_STORAGE_ENV_VARS[@]}”
     for VAR in ${REQUIRED_TEST_STORAGE_ENV_VARS[@]}; do
-        echo “${VAR}”       
         if [ "${VAR}" != "" ]; then
             echo "Detected one required test env var: $VAR"
             SOME_ENV_VARS_PRESENT="1"
