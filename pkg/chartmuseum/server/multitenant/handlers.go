@@ -33,7 +33,7 @@ var (
 working.</p>
 
 <p>For online documentation and support please refer to the
-<a href="https://github.com/xunchangguo/chartmuseum">GitHub project</a>.<br/>
+<a href="https://github.com/kubernetes-helm/chartmuseum">GitHub project</a>.<br/>
 
 <p><em>Thank you for using ChartMuseum.</em></p>
 </body>
