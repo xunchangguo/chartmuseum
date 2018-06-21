@@ -126,7 +126,7 @@ mv ./chartmuseum /usr/local/bin
 ```
 Using `latest` in URLs above will get the latest binary (built from master branch).
 
-Replace `latest` with `$(curl -s https://s3.amazonaws.com/chartmuseum/release/stable.txt)` to automatically determine the latest stable release (e.g. `v0.6.0`).
+Replace `latest` with `$(curl -s https://s3.amazonaws.com/chartmuseum/release/stable.txt)` to automatically determine the latest stable release (e.g. `v0.7.0`).
 
 Determine your version with `chartmuseum --version`.
 
@@ -336,6 +336,26 @@ To use the chart manipulation routes, simply place the name of the repo directly
 ```bash
 curl -F "chart=@mychart-0.1.0.tgz" http://localhost:8080/api/org1/repoa/charts
 ```
+
+## Cache
+
+By default, the contents of `index.yaml` (per-tenant) will be stored in memory. This means that memory usage will continue to grow indefinitely as more charts are added to storage.
+
+You may wish to offload this to an external cache store, especially for large, multitenant installations.
+
+### Using Redis
+
+Example of using Redis as an external cache store:
+```bash
+chartmuseum --debug --port=8080 \
+  --storage="local" \
+  --storage-local-rootdir="./chartstorage" \
+  --cache="redis" \
+  --cache-redis-addr="localhost:6379" \
+  --cache-redis-password="" \
+  --cache-redis-db=0
+```
+
 
 ## Prometheus Metrics
 

@@ -1,16 +1,20 @@
 package chartmuseum
 
 import (
-	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
-	cm_router "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/router"
-	mt "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/server/multitenant"
-	"github.com/xunchangguo/chartmuseum/pkg/storage"
+	"strings"
+
+	"github.com/kubernetes-helm/chartmuseum/pkg/cache"
+	cm_logger "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/logger"
+	cm_router "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/router"
+	mt "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/server/multitenant"
+	"github.com/kubernetes-helm/chartmuseum/pkg/storage"
 )
 
 type (
 	// ServerOptions are options for constructing a Server
 	ServerOptions struct {
 		StorageBackend         storage.Backend
+		ExternalCacheStore     cache.Store
 		ChartURL               string
 		TlsCert                string
 		TlsKey                 string
@@ -49,11 +53,16 @@ func NewServer(options ServerOptions) (Server, error) {
 		return nil, err
 	}
 
+	contextPath := strings.TrimSuffix(options.ContextPath, "/")
+	if contextPath != "" && !strings.HasPrefix(contextPath, "/") {
+		contextPath = "/" + contextPath
+	}
+
 	router := cm_router.NewRouter(cm_router.RouterOptions{
 		Logger:        logger,
 		Username:      options.Username,
 		Password:      options.Password,
-		ContextPath:   options.ContextPath,
+		ContextPath:   contextPath,
 		TlsCert:       options.TlsCert,
 		TlsKey:        options.TlsKey,
 		EnableMetrics: options.EnableMetrics,
@@ -66,7 +75,8 @@ func NewServer(options ServerOptions) (Server, error) {
 		Logger:                 logger,
 		Router:                 router,
 		StorageBackend:         options.StorageBackend,
-		ChartURL:               options.ChartURL,
+		ExternalCacheStore:     options.ExternalCacheStore,
+		ChartURL:               strings.TrimSuffix(options.ChartURL, "/"),
 		ChartPostFormFieldName: options.ChartPostFormFieldName,
 		ProvPostFormFieldName:  options.ProvPostFormFieldName,
 		MaxStorageObjects:      options.MaxStorageObjects,
