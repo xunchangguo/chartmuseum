@@ -19,7 +19,7 @@ import (
 	"github.com/xunchangguo/chartmuseum/pkg/storage"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubernetes-helm/chartmuseum/pkg/repo"
+	"github.com/xunchangguo/chartmuseum/pkg/repo"
 	"github.com/stretchr/testify/suite"
 )
 

@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubernetes-helm/chartmuseum/pkg/cache"
-	cm_logger "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/logger"
-	cm_router "github.com/kubernetes-helm/chartmuseum/pkg/chartmuseum/router"
-	cm_repo "github.com/kubernetes-helm/chartmuseum/pkg/repo"
-	"github.com/kubernetes-helm/chartmuseum/pkg/storage"
-	cm_storage "github.com/kubernetes-helm/chartmuseum/pkg/storage"
+	"github.com/xunchangguo/chartmuseum/pkg/cache"
+	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
+	cm_router "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/router"
+	cm_repo "github.com/xunchangguo/chartmuseum/pkg/repo"
+	"github.com/xunchangguo/chartmuseum/pkg/storage"
+	cm_storage "github.com/xunchangguo/chartmuseum/pkg/storage"
 )
 
 var (
