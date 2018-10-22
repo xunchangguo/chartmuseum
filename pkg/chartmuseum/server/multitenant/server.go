@@ -1,3 +1,19 @@
+/*
+Copyright The Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package multitenant
 
 import (
@@ -35,6 +51,7 @@ type (
 		MaxStorageObjects      int
 		IndexLimit             int
 		AllowOverwrite         bool
+		AllowForceOverwrite    bool
 		APIEnabled             bool
 		UseStatefiles          bool
 		ChartURL               string
@@ -58,6 +75,7 @@ type (
 		IndexLimit             int
 		GenIndex               bool
 		AllowOverwrite         bool
+		AllowForceOverwrite    bool
 		EnableAPI              bool
 		UseStatefiles          bool
 	}
@@ -99,6 +117,7 @@ func NewMultiTenantServer(options MultiTenantServerOptions) (*MultiTenantServer,
 		ChartPostFormFieldName: options.ChartPostFormFieldName,
 		ProvPostFormFieldName:  options.ProvPostFormFieldName,
 		AllowOverwrite:         options.AllowOverwrite,
+		AllowForceOverwrite:    options.AllowForceOverwrite,
 		APIEnabled:             options.EnableAPI,
 		UseStatefiles:          options.UseStatefiles,
 		Limiter:                make(chan struct{}, options.IndexLimit),

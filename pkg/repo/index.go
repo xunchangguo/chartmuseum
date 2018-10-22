@@ -1,3 +1,19 @@
+/*
+Copyright The Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package repo
 
 import (
@@ -14,18 +30,35 @@ var (
 	StatefileFilename    = "index-cache.yaml"
 )
 
-// Index represents the repository index (index.yaml)
-type Index struct {
-	// cryptic JSON field names to minimize size saved in cache
-	*helm_repo.IndexFile `json:"a"`
-	RepoName             string `json:"b"`
-	Raw                  []byte `json:"c"`
-	ChartURL             string `json:"d"`
-}
+type (
+	// ServerInfo contains extra data about the server
+	ServerInfo struct {
+		ContextPath string `json:"contextPath,omitempty"`
+	}
+
+	// IndexFile is a copy of Helm struct with extra data
+	IndexFile struct {
+		*helm_repo.IndexFile
+		ServerInfo *ServerInfo `json:"serverInfo"`
+	}
+
+	// Index represents the repository index (index.yaml)
+	Index struct {
+		// cryptic JSON field names to minimize size saved in cache
+		*IndexFile `json:"a"`
+		RepoName   string `json:"b"`
+		Raw        []byte `json:"c"`
+		ChartURL   string `json:"d"`
+	}
+)
 
 // NewIndex creates a new instance of Index
-func NewIndex(chartURL, repo string) *Index {
-	index := Index{&helm_repo.IndexFile{}, repo, []byte{}, chartURL}
+func NewIndex(chartURL string, repo string, serverInfo *ServerInfo) *Index {
+	indexFile := &IndexFile{
+		IndexFile:  &helm_repo.IndexFile{},
+		ServerInfo: serverInfo,
+	}
+	index := Index{indexFile, repo, []byte{}, chartURL}
 	index.Entries = map[string]helm_repo.ChartVersions{}
 	index.APIVersion = helm_repo.APIVersionV1
 	index.Regenerate()

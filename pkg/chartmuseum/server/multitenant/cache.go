@@ -1,3 +1,19 @@
+/*
+Copyright The Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package multitenant
 
 /*
@@ -20,11 +36,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	pathutil "path"
+	"sync"
+
 	cm_logger "github.com/xunchangguo/chartmuseum/pkg/chartmuseum/logger"
 	cm_repo "github.com/xunchangguo/chartmuseum/pkg/repo"
 	cm_storage "github.com/xunchangguo/chartmuseum/pkg/storage"
-	pathutil "path"
-	"sync"
 
 	"github.com/ghodss/yaml"
 	"github.com/gin-gonic/gin"
@@ -397,29 +414,38 @@ func (server *MultiTenantServer) newRepositoryIndex(log cm_logger.LoggingFn, rep
 		}
 	}
 
+	serverInfo := &cm_repo.ServerInfo{
+		ContextPath: server.Router.ContextPath,
+	}
+
 	if !server.UseStatefiles {
-		return cm_repo.NewIndex(chartURL, repo)
+		return cm_repo.NewIndex(chartURL, repo, serverInfo)
 	}
 
 	objectPath := pathutil.Join(repo, cm_repo.StatefileFilename)
 	object, err := server.StorageBackend.GetObject(objectPath)
 	if err != nil {
-		return cm_repo.NewIndex(chartURL, repo)
+		return cm_repo.NewIndex(chartURL, repo, serverInfo)
 	}
 
-	indexFile := &helm_repo.IndexFile{}
+	indexFile := &cm_repo.IndexFile{}
 	err = yaml.Unmarshal(object.Content, indexFile)
 	if err != nil {
 		log(cm_logger.WarnLevel, "index-cache.yaml found but could not be parsed",
 			"repo", repo,
 			"error", err.Error(),
 		)
-		return cm_repo.NewIndex(chartURL, repo)
+		return cm_repo.NewIndex(chartURL, repo, serverInfo)
 	}
 
 	log(cm_logger.DebugLevel, "index-cache.yaml loaded",
 		"repo", repo,
 	)
 
-	return &cm_repo.Index{indexFile, repo, object.Content, chartURL}
+	return &cm_repo.Index{
+		IndexFile: indexFile,
+		RepoName:  repo,
+		Raw:       object.Content,
+		ChartURL:  chartURL,
+	}
 }

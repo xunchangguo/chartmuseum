@@ -10,6 +10,7 @@ add a api `GET /api/charts/<name>/<version>/content` - get a chart version conte
 [![GoDoc](https://godoc.org/github.com/xunchangguo/chartmuseum?status.svg)](https://godoc.org/github.com/xunchangguo/chartmuseum)
 <sub>**_"Preserve your precious artifacts... in the cloud!"_**<sub>
 
+
 *ChartMuseum* is an open-source **[Helm Chart Repository](https://github.com/kubernetes/helm/blob/master/docs/chart_repository.md)** written in Go (Golang), with support for cloud storage backends, including [Google Cloud Storage](https://cloud.google.com/storage/), [Amazon S3](https://aws.amazon.com/s3/), [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/), [Alibaba Cloud OSS Storage](https://www.alibabacloud.com/product/oss) and [Openstack Object Storage](https://developer.openstack.org/api-ref/object-store/).
 
 Works as a valid Helm Chart Repository, and also provides an API for uploading new chart packages to storage etc.
@@ -55,7 +56,6 @@ Powered by some great Go technology:
 - `GET /api/charts` - list all charts
 - `GET /api/charts/<name>` - list all versions of a chart
 - `GET /api/charts/<name>/<version>` - describe a chart version
-- `GET /api/charts/<name>/<version>/content` - get a chart version content
 
 ### Server Info
 - `GET /` - HTML welcome page
@@ -126,7 +126,7 @@ mv ./chartmuseum /usr/local/bin
 ```
 Using `latest` in URLs above will get the latest binary (built from master branch).
 
-Replace `latest` with `$(curl -s https://s3.amazonaws.com/chartmuseum/release/stable.txt)` to automatically determine the latest stable release (e.g. `v0.7.0`).
+Replace `latest` with `$(curl -s https://s3.amazonaws.com/chartmuseum/release/stable.txt)` to automatically determine the latest stable release (e.g. `v0.7.1`).
 
 Determine your version with `chartmuseum --version`.
 
@@ -174,7 +174,15 @@ You need at least the following permissions inside your IAM Policy
 ```
 
 #### Using with Google Cloud Storage
-Make sure your environment is properly setup to access `my-gcs-bucket`
+Make sure your environment is properly setup to access `my-gcs-bucket`.
+
+One way to do so is to set the `GOOGLE_APPLICATION_CREDENTIALS` var in your environment, pointing to the JSON file containing your service account key:
+```
+export GOOGLE_APPLICATION_CREDENTIALS="/home/user/Downloads/[FILE_NAME].json"
+```
+
+More info on Google Cloud authentication can be found [here](https://cloud.google.com/docs/authentication/getting-started).
+
 ```bash
 chartmuseum --debug --port=8080 \
   --storage="google" \
@@ -263,7 +271,8 @@ The contents of index.yaml will be printed to stdout and the program will exit. 
 - `--log-json` - output structured logs as json
 - `--disable-api` - disable all routes prefixed with /api
 - `--disable-statefiles` - disable use of index-cache.yaml
-- `--allow-overwrite` - allow chart versions to be re-uploaded
+- `--allow-overwrite` - allow chart versions to be re-uploaded without ?force querystring
+- `--disable-force-overwrite` - do not allow chart versions to be re-uploaded, even with ?force querystring
 - `--chart-url=<url>` - absolute url for .tgzs in index.yaml
 - `--storage-amazon-endpoint=<endpoint>` - alternative s3 endpoint
 - `--storage-amazon-sse=<algorithm>` - s3 server side encryption algorithm
@@ -287,7 +296,7 @@ docker run --rm -it \
   -e STORAGE_AMAZON_BUCKET="my-s3-bucket" \
   -e STORAGE_AMAZON_PREFIX="" \
   -e STORAGE_AMAZON_REGION="us-east-1" \
-  -v ~/.aws:/root/.aws:ro \
+  -v ~/.aws:/home/chartmuseum/.aws:ro \
   chartmuseum/chartmuseum:latest
 ```
 

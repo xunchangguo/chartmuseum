@@ -1,3 +1,19 @@
+/*
+Copyright The Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package config
 
 import (
@@ -83,8 +99,17 @@ var configVars = map[string]configVar{
 		Default: false,
 		CLIFlag: cli.BoolFlag{
 			Name:   "allow-overwrite",
-			Usage:  "allow chart versions to be re-uploaded",
+			Usage:  "allow chart versions to be re-uploaded without ?force querystring",
 			EnvVar: "ALLOW_OVERWRITE",
+		},
+	},
+	"disableforceoverwrite": {
+		Type:    boolType,
+		Default: false,
+		CLIFlag: cli.BoolFlag{
+			Name:   "disable-force-overwrite",
+			Usage:  "do not allow chart versions to be re-uploaded, even with ?force querystring",
+			EnvVar: "DISABLE_FORCE_OVERWRITE",
 		},
 	},
 	"port": {
@@ -420,6 +445,60 @@ var configVars = map[string]configVar{
 			Name:   "depth",
 			Usage:  "levels of nested repos for multitenancy",
 			EnvVar: "DEPTH",
+		},
+	},
+	"bearerauth": {
+		Type:    boolType,
+		Default: false,
+		CLIFlag: cli.BoolFlag{
+			Name:   "bearer-auth",
+			Usage:  "enable bearer auth",
+			EnvVar: "BEARER_AUTH",
+		},
+	},
+	"authtype": {
+		Type:    stringType,
+		Default: "token",
+		CLIFlag: cli.StringFlag{
+			Name:   "auth-type",
+			Usage:  "type of auth (currently only supports token)",
+			EnvVar: "AUTH_TYPE",
+		},
+	},
+	"authrealm": {
+		Type:    stringType,
+		Default: "",
+		CLIFlag: cli.StringFlag{
+			Name:   "auth-realm",
+			Usage:  "authorization server url",
+			EnvVar: "AUTH_REALM",
+		},
+	},
+	"authservice": {
+		Type:    stringType,
+		Default: "",
+		CLIFlag: cli.StringFlag{
+			Name:   "auth-service",
+			Usage:  "authorization server service name",
+			EnvVar: "AUTH_SERVICE",
+		},
+	},
+	"authissuer": {
+		Type:    stringType,
+		Default: "",
+		CLIFlag: cli.StringFlag{
+			Name:   "auth-issuer",
+			Usage:  "authorization server name",
+			EnvVar: "AUTH_ISSUER",
+		},
+	},
+	"authcertpath": {
+		Type:    stringType,
+		Default: "",
+		CLIFlag: cli.StringFlag{
+			Name:   "auth-cert-path",
+			Usage:  "path to authorization server public pem file",
+			EnvVar: "AUTH_CERT_PATH",
 		},
 	},
 }

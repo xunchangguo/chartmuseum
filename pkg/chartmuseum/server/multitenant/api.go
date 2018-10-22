@@ -1,3 +1,19 @@
+/*
+Copyright The Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package multitenant
 
 import (
@@ -58,25 +74,25 @@ func (server *MultiTenantServer) deleteChartVersion(log cm_logger.LoggingFn, rep
 	return nil
 }
 
-func (server *MultiTenantServer) uploadChartPackage(log cm_logger.LoggingFn, repo string, content []byte) *HTTPError {
+func (server *MultiTenantServer) uploadChartPackage(log cm_logger.LoggingFn, repo string, content []byte, force bool) *HTTPError {
 	filename, err := cm_repo.ChartPackageFilenameFromContent(content)
 	if err != nil {
 		return &HTTPError{500, err.Error()}
 	}
-	if !server.AllowOverwrite {
+	if !server.AllowOverwrite && (!server.AllowForceOverwrite || !force) {
 		_, err = server.StorageBackend.GetObject(pathutil.Join(repo, filename))
 		if err == nil {
 			return &HTTPError{409, "file already exists"}
 		}
 	}
-	limitReached, err := server.checkStorageLimit(repo, filename)
+	limitReached, err := server.checkStorageLimit(repo, filename, force)
 	if err != nil {
 		return &HTTPError{500, err.Error()}
 	}
 	if limitReached {
 		return &HTTPError{507, "repo has reached storage limit"}
 	}
-	log(cm_logger.DebugLevel,"Adding package to storage",
+	log(cm_logger.DebugLevel, "Adding package to storage",
 		"package", filename,
 	)
 	err = server.StorageBackend.PutObject(pathutil.Join(repo, filename), content)
@@ -86,25 +102,25 @@ func (server *MultiTenantServer) uploadChartPackage(log cm_logger.LoggingFn, rep
 	return nil
 }
 
-func (server *MultiTenantServer) uploadProvenanceFile(log cm_logger.LoggingFn, repo string, content []byte) *HTTPError {
+func (server *MultiTenantServer) uploadProvenanceFile(log cm_logger.LoggingFn, repo string, content []byte, force bool) *HTTPError {
 	filename, err := cm_repo.ProvenanceFilenameFromContent(content)
 	if err != nil {
 		return &HTTPError{500, err.Error()}
 	}
-	if !server.AllowOverwrite {
+	if !server.AllowOverwrite && (!server.AllowForceOverwrite || !force) {
 		_, err = server.StorageBackend.GetObject(pathutil.Join(repo, filename))
 		if err == nil {
 			return &HTTPError{409, "file already exists"}
 		}
 	}
-	limitReached, err := server.checkStorageLimit(repo, filename)
+	limitReached, err := server.checkStorageLimit(repo, filename, force)
 	if err != nil {
 		return &HTTPError{500, err.Error()}
 	}
 	if limitReached {
 		return &HTTPError{507, "repo has reached storage limit"}
 	}
-	log(cm_logger.DebugLevel,"Adding provenance file to storage",
+	log(cm_logger.DebugLevel, "Adding provenance file to storage",
 		"provenance_file", filename,
 	)
 	err = server.StorageBackend.PutObject(pathutil.Join(repo, filename), content)
@@ -114,7 +130,7 @@ func (server *MultiTenantServer) uploadProvenanceFile(log cm_logger.LoggingFn, r
 	return nil
 }
 
-func (server *MultiTenantServer) checkStorageLimit(repo string, filename string) (bool, error) {
+func (server *MultiTenantServer) checkStorageLimit(repo string, filename string, force bool) (bool, error) {
 	if server.MaxStorageObjects > 0 {
 		allObjects, err := server.StorageBackend.ListObjects(repo)
 		if err != nil {
@@ -122,7 +138,7 @@ func (server *MultiTenantServer) checkStorageLimit(repo string, filename string)
 		}
 		if len(allObjects) >= server.MaxStorageObjects {
 			limitReached := true
-			if server.AllowOverwrite {
+			if server.AllowOverwrite || (server.AllowForceOverwrite && force) {
 				// if the max has been reached, we should still allow
 				// user to overwrite an existing file
 				for _, object := range allObjects {

@@ -1,3 +1,19 @@
+/*
+Copyright The Helm Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package main
 
 import (
@@ -62,6 +78,7 @@ func cliHandler(c *cli.Context) {
 		EnableAPI:              !conf.GetBool("disableapi"),
 		UseStatefiles:          !conf.GetBool("disablestatefiles"),
 		AllowOverwrite:         conf.GetBool("allowoverwrite"),
+		AllowForceOverwrite:    !conf.GetBool("disableforceoverwrite"),
 		EnableMetrics:          !conf.GetBool("disablemetrics"),
 		AnonymousGet:           conf.GetBool("authanonymousget"),
 		GenIndex:               conf.GetBool("genindex"),
@@ -69,6 +86,12 @@ func cliHandler(c *cli.Context) {
 		IndexLimit:             conf.GetInt("indexlimit"),
 		Depth:                  conf.GetInt("depth"),
 		MaxUploadSize:          conf.GetInt("maxuploadsize"),
+		BearerAuth:             conf.GetBool("bearerauth"),
+		AuthType:               conf.GetString("authtype"),
+		AuthRealm:              conf.GetString("authrealm"),
+		AuthService:            conf.GetString("authservice"),
+		AuthIssuer:             conf.GetString("authissuer"),
+		AuthCertPath:           conf.GetString("authcertpath"),
 	}
 
 	server, err := newServer(options)
