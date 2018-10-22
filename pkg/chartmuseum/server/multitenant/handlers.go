@@ -160,6 +160,25 @@ func (server *MultiTenantServer) getChartContentRequestHandler(c *gin.Context) {
 	c.JSON(200, chartContent)
 }
 
+func (server *MultiTenantServer) getChartValuesRequestHandler(c *gin.Context) {
+	repo := c.Param("repo")
+	name := c.Param("name")
+	version := c.Param("version")
+	log := server.Logger.ContextLoggingFn(c)
+	filename := cm_repo.ChartPackageFilenameFromNameVersion(name, version)
+	storageObject, err := server.getStorageObject(log, repo, filename)
+	if err != nil {
+		c.JSON(err.Status, gin.H{"error": err.Message})
+		return
+	}
+	chartContent, errr := cm_repo.ChartFromStorageObject(storageObject.Object)
+	if errr != nil {
+		c.JSON(404, gin.H{"error": errr.Error()})
+		return
+	}
+	c.JSON(200, chartContent.Values.Values)
+}
+
 func (server *MultiTenantServer) deleteChartVersionRequestHandler(c *gin.Context) {
 	repo := c.Param("repo")
 	name := c.Param("name")
