@@ -176,7 +176,8 @@ func (server *MultiTenantServer) getChartValuesRequestHandler(c *gin.Context) {
 		c.JSON(404, gin.H{"error": errr.Error()})
 		return
 	}
-	c.JSON(200, chartContent.Values.Values)
+	fmt.Printf("%v", chartContent.Values)
+	c.JSON(200, chartContent.Values)
 }
 
 func (server *MultiTenantServer) deleteChartVersionRequestHandler(c *gin.Context) {
