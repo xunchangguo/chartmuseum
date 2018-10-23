@@ -182,7 +182,18 @@ func (server *MultiTenantServer) getChartValuesRequestHandler(c *gin.Context) {
 		c.JSON(500, gin.H{"error": jerr.Error()})
 		return
 	}
-	c.JSON(200, string(j))
+	c.Status(200)
+	writeContentType(c.Writer)
+	c.Writer.Write(j)
+	//c.JSON(200, string(j))
+}
+
+func writeContentType(w http.ResponseWriter) {
+	value := []string{"application/json; charset=utf-8"}
+	header := w.Header()
+	if val := header["Content-Type"]; len(val) == 0 {
+		header["Content-Type"] = value
+	}
 }
 
 func (server *MultiTenantServer) deleteChartVersionRequestHandler(c *gin.Context) {
