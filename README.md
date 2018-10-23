@@ -5,6 +5,9 @@ forked from kubernetes-helm/chartmuseum.
 
 add a api `GET /api/charts/<name>/<version>/content` - get a chart version content
 
+add a api `GET /api/charts/<name>/<version>/value` - get a chart values
+
+
 [![CircleCI](https://circleci.com/gh/xunchangguo/chartmuseum.svg?style=svg)](https://circleci.com/gh/xunchangguo/chartmuseum)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xunchangguo/chartmuseum)](https://goreportcard.com/report/github.com/xunchangguo/chartmuseum)
 [![GoDoc](https://godoc.org/github.com/xunchangguo/chartmuseum?status.svg)](https://godoc.org/github.com/xunchangguo/chartmuseum)
