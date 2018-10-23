@@ -180,7 +180,7 @@ func (server *MultiTenantServer) getChartValuesRequestHandler(c *gin.Context) {
 	}
 	j, err := yaml.YAMLToJSON([]byte(chartContent.Values.Raw))
 	if err != nil {
-		c.JSON(500, gin.H{"error": errr.Error()})
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(200, j)
