@@ -25,7 +25,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gin-gonic/gin"
-	"k8s.io/helm/pkg/proto/hapi/chart"
 
 	cm_repo "github.com/xunchangguo/chartmuseum/pkg/repo"
 )
@@ -178,9 +177,9 @@ func (server *MultiTenantServer) getChartValuesRequestHandler(c *gin.Context) {
 		c.JSON(404, gin.H{"error": errr.Error()})
 		return
 	}
-	j, err := yaml.YAMLToJSON([]byte(chartContent.Values.Raw))
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	j, jerr := yaml.YAMLToJSON([]byte(chartContent.Values.Raw))
+	if jerr != nil {
+		c.JSON(500, gin.H{"error": jerr.Error()})
 		return
 	}
 	c.JSON(200, j)
